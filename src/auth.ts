@@ -1,6 +1,4 @@
 import { Notice } from "obsidian";
-import * as http from "http";
-import * as url from "url";
 import type SpotifySorterPlugin from "./main";
 
 interface TokenResponse {
@@ -14,6 +12,33 @@ const SCOPES = [
   "playlist-read-private",
   "playlist-read-collaborative",
 ].join(" ");
+
+let pendingAuthResolve: ((code: string) => void) | null = null;
+let pendingAuthReject: ((reason: Error) => void) | null = null;
+let authTimeout: ReturnType<typeof setTimeout> | null = null;
+
+export function handleAuthCallback(params: Record<string, string>): void {
+  if (!pendingAuthResolve || !pendingAuthReject) return;
+
+  const resolve = pendingAuthResolve;
+  const reject = pendingAuthReject;
+  pendingAuthResolve = null;
+  pendingAuthReject = null;
+
+  if (authTimeout) {
+    clearTimeout(authTimeout);
+    authTimeout = null;
+  }
+
+  const error = params["error"];
+  const code = params["code"];
+
+  if (error || !code) {
+    reject(new Error(`Spotify authorization failed: ${error ?? "no code returned"}`));
+  } else {
+    resolve(code);
+  }
+}
 
 export async function authenticate(plugin: SpotifySorterPlugin): Promise<string> {
   const { clientId, clientSecret, redirectUri } = plugin.settings;
@@ -63,43 +88,18 @@ function getAuthorizationCode(clientId: string, redirectUri: string): Promise<st
     });
     const authUrl = `https://accounts.spotify.com/authorize?${params}`;
 
-    const server = http.createServer((req, res) => {
-      const parsed = url.parse(req.url ?? "", true);
-      if (parsed.pathname !== "/callback") return;
+    pendingAuthResolve = resolve;
+    pendingAuthReject = reject;
 
-      const code = parsed.query.code as string | undefined;
-      const error = parsed.query.error as string | undefined;
-
-      res.writeHead(200, { "Content-Type": "text/html" });
-      res.end(
-        error
-          ? `<h1>Authorization failed: ${error}</h1><p>You can close this tab.</p>`
-          : `<h1>Authorization successful!</h1><p>You can close this tab and return to Obsidian.</p>`
-      );
-      server.close();
-
-      if (error || !code) {
-        reject(new Error(`Spotify authorization failed: ${error ?? "no code returned"}`));
-      } else {
-        resolve(code);
-      }
-    });
-
-    const port = parseInt(new URL(redirectUri).port || "8100");
-    server.listen(port, "127.0.0.1", () => {
-      new Notice("Spotify Sorter: Opening browser for Spotify authorization...", 8000);
-      // Use Electron's shell to open in the system browser
-      const { shell } = require("electron") as typeof import("electron");
-      shell.openExternal(authUrl);
-    });
-
-    server.on("error", (err) => reject(new Error(`Could not start callback server: ${err.message}`)));
-
-    // Time out after 5 minutes
-    setTimeout(() => {
-      server.close();
+    authTimeout = setTimeout(() => {
+      pendingAuthResolve = null;
+      pendingAuthReject = null;
+      authTimeout = null;
       reject(new Error("Authorization timed out (5 minutes). Please try again."));
     }, 5 * 60 * 1000);
+
+    new Notice("Spotify Sorter: Opening browser for Spotify authorization...", 8000);
+    window.open(authUrl);
   });
 }
 

@@ -14,7 +14,7 @@ export interface SpotifySorterSettings {
 export const DEFAULT_SETTINGS: SpotifySorterSettings = {
   clientId: "",
   clientSecret: "",
-  redirectUri: "http://127.0.0.1:8100/callback",
+  redirectUri: "obsidian://spotify-auth",
   outputFolder: "",
   accessToken: "",
   refreshToken: "",
@@ -34,7 +34,7 @@ export class SpotifySorterSettingTab extends PluginSettingTab {
     containerEl.empty();
 
     containerEl.createEl("p", {
-      text: "Create a Spotify app at developer.spotify.com, add http://127.0.0.1:8100/callback as a Redirect URI, then paste your credentials below.",
+      text: "Create a Spotify app at developer.spotify.com, add obsidian://spotify-auth as a Redirect URI, then paste your credentials below.",
     });
 
     new Setting(containerEl)
@@ -71,7 +71,7 @@ export class SpotifySorterSettingTab extends PluginSettingTab {
       )
       .addText((text) =>
         text
-          .setPlaceholder("http://127.0.0.1:8100/callback")
+          .setPlaceholder("obsidian://spotify-auth")
           .setValue(this.plugin.settings.redirectUri)
           .onChange(async (value) => {
             this.plugin.settings.redirectUri = value.trim();

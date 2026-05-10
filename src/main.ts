@@ -1,5 +1,5 @@
 import { Notice, Plugin, TFile } from "obsidian";
-import { authenticate } from "./auth";
+import { authenticate, handleAuthCallback } from "./auth";
 import { getLikedSongs, getAllPlaylistTrackIds, SpotifyTrack } from "./spotify";
 import {
   SpotifySorterSettings,
@@ -13,6 +13,10 @@ export default class SpotifySorterPlugin extends Plugin {
   async onload() {
     await this.loadSettings();
     this.addSettingTab(new SpotifySorterSettingTab(this.app, this));
+
+    this.registerObsidianProtocolHandler("spotify-auth", (params) => {
+      handleAuthCallback(params);
+    });
 
     this.addCommand({
       id: "find-unorganized-tracks",
