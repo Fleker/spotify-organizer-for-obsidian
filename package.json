@@ -1,5 +1,5 @@
 {
-  "name": "obsidian-spotify-sorter",
+  "name": "spotify-sorter",
   "version": "1.0.0",
   "description": "Obsidian plugin: find Liked Songs not in any playlist",
   "main": "main.js",
@@ -7,6 +7,12 @@
     "dev": "node esbuild.config.mjs",
     "build": "tsc --noEmit && node esbuild.config.mjs production"
   },
+	"keywords": [],
+	"author": "Nick Felker",
+	"license": "Apache-2.0",
+  "repository": {
+		"url": "https://github.com/fleker/spotify-organizer-for-obsidian"
+	},
   "devDependencies": {
     "@types/node": "^22.0.0",
     "builtin-modules": "^4.0.0",

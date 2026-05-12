@@ -1,8 +1,8 @@
 {
   "id": "spotify-sorter",
   "name": "Spotify Sorter",
-  "version": "1.0.0",
-  "minAppVersion": "1.0.0",
+  "version": "1.0.1",
+  "minAppVersion": "1.4.16",
   "description": "Find Liked Songs that aren't in any of your Spotify playlists and save them as a note.",
   "author": "Nick Felker",
   "authorUrl": "https://felker.dev",
